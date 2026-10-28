@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Colliery Research Map</title>
+  <meta name="description" content="A research map for finding traces of Pennsylvania's old anthracite collieries: LIDAR bare-earth relief, aerial photos from the 1940s to today, USGS topo maps back to the 1880s, elevation profiles and saved notes.">
+  <link rel="icon" href="icons/headframe.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#16181b">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Colliery Research Map">
+  <meta property="og:description" content="LIDAR, aerial photos from the 1940s to today and topo maps back to the 1880s, with tools for measuring, elevation profiles and notes.">
+
+  <!-- Open connections to the map servers early, so the first images arrive sooner -->
+  <link rel="preconnect" href="https://imagery.pasda.psu.edu">
+  <link rel="preconnect" href="https://server.arcgisonline.com">
+  <link rel="preconnect" href="https://historical1.arcgis.com">
+  <link rel="preconnect" href="https://a.tiles.openrailwaymap.org">
+  <link rel="preconnect" href="https://conservationexplorer.dcnr.pa.gov">
+  <link rel="preconnect" href="https://theman42069.github.io" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Source+Sans+3:wght@400;600&display=swap">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/style.css?v=12">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Colliery Research Map, reset view">
+      <img src="icons/headframe.svg" alt="" width="28" height="28">
+      <span class="brand-text">
+        <span class="brand-title">Colliery Research Map</span>
+        <span class="brand-sub">LIDAR, old photos &amp; topo maps</span>
+      </span>
+    </a>
+
+    <div class="search" role="search">
+      <label for="search" class="visually-hidden">Search for a colliery, address, town or coordinates</label>
+      <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+      <input id="search" type="search" placeholder="Colliery, address, town or coordinates" autocomplete="off"
+             role="combobox" aria-expanded="false" aria-controls="search-results" aria-autocomplete="list">
+      <ul id="search-results" class="search-results" role="listbox" hidden></ul>
+    </div>
+
+    <a class="top-link" href="https://theman42069.github.io/anthracite-collieries/" target="_blank" rel="noopener" title="Anthracite Collieries of Pennsylvania">
+      <span class="top-link-long">Colliery histories</span> ↗
+    </a>
+  </header>
+
+  <div class="layout">
+    <div class="stage">
+      <div id="map" aria-label="Research map"></div>
+      <div class="mode-bar" id="mode-bar" hidden>
+        <span id="mode-text"></span>
+        <button type="button" class="btn" id="mode-done">Done</button>
+      </div>
+      <div class="loading" id="loading" role="status" hidden><span class="spinner" aria-hidden="true"></span> Loading…</div>
+
+      <!-- On-map controls: the view along the top, extras on the right, time travel along the bottom -->
+      <div class="map-top">
+        <div class="chips" id="ground" role="radiogroup" aria-label="Map view"></div>
+        <div class="chips extras" aria-label="Show on the map">
+          <label class="chip" title="When on, clicking the map shows that spot's height, old photos and links. Turn off to click around freely."><input type="checkbox" id="spot-on" checked> 📍 Spot info</label>
+          <label class="chip" title="Colliery pins (P)"><input type="checkbox" id="show-pins" checked> Pins</label>
+          <label class="chip" title="Every railroad in OpenStreetMap plus about 1,500 abandoned, disused and torn-up lines and the old spurs to the breakers. Hover a line for its name (R)"><input type="checkbox" id="show-rails"> Rails</label>
+          <label class="chip" title="Town and road names"><input type="checkbox" id="show-labels"> Names</label>
+        </div>
+        <div class="chips mines" aria-label="Mining records">
+          <label class="chip seam-chip" title="Old mine maps of one coal seam, laid over the map (Southern field: Pottsville, Tamaqua, Shenandoah, Mahanoy area)">
+            ⛏ Mine maps
+            <select id="mine-seam" aria-label="Coal seam"><option value="">Off</option></select>
+          </label>
+          <input type="range" id="mine-opacity" min="20" max="100" value="80" aria-label="How solid the mine maps are" hidden>
+          <label class="chip" title="Abandoned mine hazards from the state inventory: shafts, openings, highwalls and more. Red: not yet reclaimed. Zoom in to see them."><input type="checkbox" id="show-hazards"> ⚠ <span id="hazard-label">Mine hazards</span></label>
+        </div>
+      </div>
+
+      <div class="timebar" id="time-card">
+        <div class="timebar-closed">
+          <label class="chip big" title="Lay old maps and photos over the map (T)"><input type="checkbox" id="time-on"> <span aria-hidden="true">⏳</span> Time travel</label>
+          <button type="button" class="chip big" id="lidar-change" title="Blink the 2006–08 LIDAR over the 2017–20 one: ground that changes was dug, filled or hauled away in between">⚡ What changed?</button>
+        </div>
+        <div class="timebar-open" id="time-body" hidden>
+          <div class="year-row">
+            <button type="button" class="icon-btn" id="time-prev" aria-label="Older (left arrow)">&#8249;</button>
+            <div class="year-label">
+              <strong id="time-year"></strong>
+              <span id="time-name"></span>
+            </div>
+            <button type="button" class="icon-btn" id="time-next" aria-label="Newer (right arrow)">&#8250;</button>
+            <button type="button" class="icon-btn play" id="time-play" aria-label="Play through the years (space)" aria-pressed="false">&#9654;</button>
+          </div>
+          <input type="range" id="time-slider" min="0" max="0" value="0" aria-label="Year">
+          <div class="ticks" id="time-ticks" aria-hidden="true"></div>
+          <div class="time-row">
+            <div class="seg" role="radiogroup" aria-label="How to show the older view">
+              <button type="button" role="radio" data-mode="fade" aria-checked="true" title="F">Fade</button>
+              <button type="button" role="radio" data-mode="swipe" aria-checked="false" title="S">Swipe</button>
+              <button type="button" role="radio" data-mode="blink" aria-checked="false" title="B">Blink</button>
+            </div>
+            <input type="range" id="opacity" min="10" max="100" value="75" aria-label="How solid the older view is">
+          </div>
+          <p class="hint" id="time-hint"></p>
+        </div>
+      </div>
+    </div>
+
+    <aside class="side" aria-label="Research tools">
+      <div class="tabs" role="tablist" aria-label="Panels">
+        <button type="button" role="tab" id="tab-spot" aria-controls="pane-spot" aria-selected="true">This spot</button>
+        <button type="button" role="tab" id="tab-tools" aria-controls="pane-tools" aria-selected="false" tabindex="-1">Measure &amp; notes</button>
+      </div>
+
+      <!-- This spot -->
+      <section class="pane" id="pane-spot" role="tabpanel" aria-labelledby="tab-spot">
+        <div class="empty" id="spot-empty">
+          <h2>Find what's left</h2>
+          <ol class="steps">
+            <li><b>Pick a view</b> at the top of the map. <em>LIDAR + photo</em> shows today's ground with every bank, pit and rail bed in relief.</li>
+            <li><b>Time travel</b> lays topo maps back to the 1880s and aerial photos over it. Slide or press play.</li>
+            <li><b>Click any spot</b> for its height, 1930s–70s aerial photos and links. Turn off <em>📍 Spot info</em> at the top if you'd rather click around freely.</li>
+          </ol>
+          <p class="hint">Keys: <kbd>1</kbd>–<kbd>6</kbd> views · <kbd>T</kbd> time travel · <kbd>←</kbd> <kbd>→</kbd> years · <kbd>Space</kbd> play · <kbd>F</kbd> <kbd>S</kbd> <kbd>B</kbd> fade, swipe, blink · <kbd>/</kbd> search</p>
+        </div>
+        <div id="spot" hidden>
+          <div class="spot-coords">
+            <div>
+              <strong id="spot-dec"></strong>
+              <span id="spot-dms"></span>
+            </div>
+            <button type="button" class="btn" id="spot-copy">Copy</button>
+          </div>
+          <p class="spot-height">Ground height: <strong id="spot-height"></strong></p>
+          <div class="btn-row">
+            <button type="button" class="btn" id="spot-note">Add a note here</button>
+            <button type="button" class="btn" id="spot-time">Old maps of this spot</button>
+          </div>
+
+          <h2>Old aerial photos</h2>
+          <p class="hint">The PennPilot photo from each decade whose middle is nearest this spot. Each covers about 3 miles across, so the spot is somewhere in the frame. Tap one to open it full size.</p>
+          <ul class="photos" id="spot-photos"></ul>
+          <p class="hint" id="spot-photos-status"></p>
+
+          <h2>See it elsewhere</h2>
+          <div class="links" id="spot-links"></div>
+        </div>
+      </section>
+
+      <!-- Measure and notes -->
+      <section class="pane" id="pane-tools" role="tabpanel" aria-labelledby="tab-tools" hidden>
+        <h2>Measure &amp; ground profile</h2>
+        <p class="hint">Click along a route on the map to measure it and see how the ground rises and falls.</p>
+        <button type="button" class="btn" id="measure" aria-pressed="false">Start measuring</button>
+        <div id="measure-out" hidden>
+          <p class="measure-total" id="measure-total"></p>
+          <div class="profile" id="profile"></div>
+          <button type="button" class="btn" id="measure-clear">Clear the line</button>
+        </div>
+
+        <h2>My notes <span class="count" id="note-count"></span></h2>
+        <p class="hint">Kept in this browser only. Download them to keep a copy or to open in Google Earth or QGIS.</p>
+        <button type="button" class="btn" id="note-add" aria-pressed="false">Add a note</button>
+        <ul class="list" id="notes"></ul>
+        <div class="btn-row">
+          <button type="button" class="btn" id="notes-export">Download notes</button>
+          <button type="button" class="btn" id="notes-import-btn">Load a notes file</button>
+          <input type="file" id="notes-import" accept=".geojson,.json,application/geo+json" hidden>
+        </div>
+
+        <h2>Units</h2>
+        <div class="seg" role="radiogroup" aria-label="Units" id="units">
+          <button type="button" role="radio" data-units="mi" aria-checked="true">Feet &amp; miles</button>
+          <button type="button" role="radio" data-units="km" aria-checked="false">Meters &amp; km</button>
+        </div>
+      </section>
+
+      <details class="credits">
+        <summary>Sources &amp; safety</summary>
+        <p>LIDAR: USGS 3DEP (2017–2020) and PAMAP (2006–2008). Aerial photos: NHAP, USGS, NAIP, PAMAP, PEMA and PennPilot, all served by <a href="https://www.pasda.psu.edu/" target="_blank" rel="noopener">PASDA</a>, Penn State. Slope and ground heights: <a href="https://www.usgs.gov/3d-elevation-program" target="_blank" rel="noopener">USGS 3D Elevation Program</a>. Topo maps: USGS Historical Topographic Map Collection via Esri. Satellite: Esri, Maxar, Earthstar Geographics. Place search: Esri World Geocoder. Colliery pins and railroads: <a href="https://theman42069.github.io/anthracite-collieries/" target="_blank" rel="noopener">Anthracite Collieries of Pennsylvania</a> and OpenStreetMap contributors.</p>
+        <p><b>Stay safe.</b> Old mine ground can collapse, and most of it is private property. Research from home, and ask before going on anyone's land.</p>
+      </details>
+    </aside>
+  </div>
+
+  <!-- Old aerial photo viewer: opens when a PennPilot photo is tapped -->
+  <div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-labelledby="viewer-title" hidden>
+    <div class="viewer-head">
+      <button type="button" class="icon-btn" id="viewer-prev" aria-label="Older photo">&#8249;</button>
+      <div class="viewer-title">
+        <strong id="viewer-title"></strong>
+        <span id="viewer-status" role="status"></span>
+      </div>
+      <button type="button" class="icon-btn" id="viewer-next" aria-label="Newer photo">&#8250;</button>
+      <button type="button" class="icon-btn" id="viewer-close" aria-label="Close the photo viewer">&times;</button>
+    </div>
+    <div id="viewer-map" aria-label="Aerial photo. Scroll or pinch to zoom, drag to move."></div>
+    <div class="viewer-tools">
+      <label class="slider-row">Brightness <input type="range" id="enh-bright" min="50" max="200" value="100"></label>
+      <label class="slider-row">Contrast <input type="range" id="enh-contrast" min="50" max="250" value="100"></label>
+      <label class="slider-row">Sharpen <input type="range" id="enh-sharp" min="0" max="100" value="0"></label>
+      <div class="btn-row">
+        <button type="button" class="btn" id="enh-auto">Enhance</button>
+        <button type="button" class="btn" id="enh-reset">Reset</button>
+      </div>
+      <div class="tiff-steps" id="tiff-steps">
+        <span><b>11× sharper:</b></span>
+        <a class="btn" id="viewer-tiff" target="_blank" rel="noopener">1. Download the full TIFF (45 MB)</a>
+        <button type="button" class="btn" id="viewer-open">2. Open it here</button>
+        <span class="hint">or drop the file on the photo</span>
+        <input type="file" id="viewer-file" accept=".tif,.tiff,image/tiff" hidden>
+      </div>
+    </div>
+  </div>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <filter id="sharpen"><feConvolveMatrix id="sharpen-kernel" order="3" preserveAlpha="true" kernelMatrix="0 0 0 0 1 0 0 0 0"/></filter>
+  </svg>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/app.js?v=14"></script>
+</body>
+</html>

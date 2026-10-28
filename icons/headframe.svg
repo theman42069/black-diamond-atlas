@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Colliery headframe: two legs, a center post, cross braces and the sheave wheel on top -->
+  <rect width="32" height="32" rx="6" fill="#1f2226"/>
+  <g fill="none" stroke="#d4a24c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 27 L16 9 L23 27"/>
+    <path d="M16 9 V27"/>
+    <path d="M11.4 21 H20.6 M13.3 16 H18.7"/>
+    <circle cx="16" cy="7.5" r="3"/>
+    <path d="M6 27 H26"/>
+  </g>
+</svg>
