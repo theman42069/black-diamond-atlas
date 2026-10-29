@@ -1,4 +1,4 @@
-/* Colliery Research Map. A ground view (LIDAR, slope, satellite or streets) with an optional older view
+/* Black Diamond Atlas. A ground view (LIDAR, slope, satellite or streets) with an optional older view
    on top, chosen on a slider that runs from USGS topo sheets of the 1880s to aerial photos of the 2020s.
    Clicking the map shows that spot's height, old PennPilot photos and links; there's also a measuring
    line with a ground profile, and notes kept in this browser. The view is kept in the address, so a
@@ -839,10 +839,31 @@
   });
   $('mine-opacity').addEventListener('input', function (e) { if (seamLayer) seamLayer.setOpacity(e.target.value / 100); });
 
-  // Abandoned mine hazards from the state inventory (via DCNR), fetched for the view when zoomed in.
-  var AML = 'https://conservationexplorer.dcnr.pa.gov/arcgis/rest/services/PA_Public/AML_Points/MapServer/0/query';
+  // Abandoned mine hazards: PA DEP's Abandoned Mine Land inventory as published monthly on PASDA.
+  // Layer 1 is the outline of each problem area (strip pits, banks, subsidence), layer 0 the point features
+  // (shafts, openings, fires). Fetched for the view when zoomed in, every page, so nothing is left out.
+  var AML = 'https://mapservices.pasda.psu.edu/server/rest/services/pasda/DEP/MapServer/';
   var hazards = L.layerGroup();
   var hazardReq = 0;
+
+  function fetchAll(layerId, bbox, offset, got) {
+    return getJson(AML + layerId + '/query?where=1%3D1&geometryType=esriGeometryEnvelope&inSR=4326&outSR=4326' +
+      '&returnGeometry=true&f=geojson&orderByFields=OBJECTID&resultRecordCount=1000&resultOffset=' + offset +
+      '&outFields=sf_name,sf_type,sf_status,sf_prior_1,sf_probl_1,height_ft,volume_cy,flow_gpm&geometry=' + bbox).then(function (d) {
+      got = got.concat(d.features || []);
+      return (d.features || []).length === 1000 ? fetchAll(layerId, bbox, offset + 1000, got) : got;
+    });
+  }
+
+  function hazardTip(p) {
+    var problem = String(p.sf_probl_1 || p.sf_type || 'Mine hazard').replace(/^\d+\s+/, '');
+    var size = [p.height_ft ? p.height_ft + ' ft high' : '', p.volume_cy ? p.volume_cy.toLocaleString() + ' cu yd' : '',
+      p.flow_gpm ? p.flow_gpm + ' gal/min' : ''].filter(Boolean).join(', ');
+    return '<b>' + escapeHtml(problem) + '</b>' +
+      '<br>' + escapeHtml(p.sf_type || '') + (p.sf_status ? ' · ' + escapeHtml(p.sf_status) : '') +
+      (p.sf_prior_1 ? '<br>' + escapeHtml(p.sf_prior_1) : '') + (size ? '<br>' + escapeHtml(size) : '') +
+      (p.sf_name ? '<br><small>Site ' + escapeHtml(p.sf_name) + '</small>' : '');
+  }
 
   function loadHazards() {
     if (!map.hasLayer(hazards)) return;
@@ -852,30 +873,31 @@
       return;
     }
     var b = map.getBounds(), req = ++hazardReq;
-    getJson(AML + '?where=1%3D1&geometryType=esriGeometryEnvelope&inSR=4326&outSR=4326&returnGeometry=true&f=geojson' +
-      '&outFields=SF_NAME,SF_TYPE,SF_STATUS,SF_PRIOR_1,SF_PROBL_1&geometry=' +
-      [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].map(function (v) { return v.toFixed(5); }).join(',')).then(function (d) {
+    var bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].map(function (v) { return v.toFixed(5); }).join(',');
+    Promise.all([fetchAll(1, bbox, 0, []), fetchAll(0, bbox, 0, [])]).then(function (r) {
       if (req !== hazardReq) return;
       hazards.clearLayers();
-      L.geoJSON(d, {
+      var color = function (p) { return /complete/i.test(p.sf_status || '') ? '#9aa0a6' : '#e5484d'; };
+      L.geoJSON({ type: 'FeatureCollection', features: r[0].concat(r[1]) }, {
+        style: function (f) {
+          if (f.geometry.type === 'Point') return {}; // dots are styled in pointToLayer
+          var c = color(f.properties);
+          return { color: c, weight: 2, fillColor: c, fillOpacity: 0.18, bubblingMouseEvents: false };
+        },
+        // Points by kind: shafts red, slopes blue, anything else amber; reclaimed ones faded.
         pointToLayer: function (f, ll) {
-          var done = /complete/i.test(f.properties.SF_STATUS || '');
+          var p = f.properties, kind = p.sf_probl_1 || '';
           return L.circleMarker(ll, {
-            radius: done ? 5 : 6, weight: 2, color: '#16181b', fillOpacity: 0.95, bubblingMouseEvents: false,
-            fillColor: done ? '#9aa0a6' : '#e5484d'
+            radius: 6, weight: 2, color: '#16181b', bubblingMouseEvents: false,
+            fillOpacity: /complete/i.test(p.sf_status || '') ? 0.35 : 0.95,
+            fillColor: /shaft/i.test(kind) ? '#e5484d' : /slope/i.test(kind) ? '#3b82f6' : '#f5a524'
           });
         },
         onEachFeature: function (f, layer) {
-          var p = f.properties;
-          var problem = String(p.SF_PROBL_1 || p.SF_TYPE || 'Mine hazard').replace(/^\d+\s+/, '');
-          layer.bindTooltip('<b>' + escapeHtml(problem) + '</b>' +
-            '<br>' + escapeHtml(p.SF_TYPE || '') + (p.SF_STATUS ? ' · ' + escapeHtml(p.SF_STATUS) : '') +
-            (p.SF_PRIOR_1 ? '<br>' + escapeHtml(p.SF_PRIOR_1) : '') +
-            (p.SF_NAME ? '<br><small>Site ' + escapeHtml(p.SF_NAME) + '</small>' : ''), { className: 'map-tip', direction: 'top' });
+          layer.bindTooltip(hazardTip(f.properties), { className: 'map-tip', direction: 'top', sticky: f.geometry.type !== 'Point' });
         }
       }).addTo(hazards);
-      // The service sends at most 1,000 at a time.
-      $('hazard-label').textContent = d.features.length >= 1000 ? 'Mine hazards (zoom in for all)' : 'Mine hazards (' + d.features.length + ')';
+      $('hazard-label').textContent = 'Mine hazards (' + (r[0].length + r[1].length) + ')';
     }).catch(function () { if (req === hazardReq) $('hazard-label').textContent = 'Mine hazards (not loading)'; });
   }
 

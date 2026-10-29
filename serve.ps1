@@ -1,4 +1,4 @@
-# Tiny static web server for previewing the Colliery Research Map (no Python, Node or admin rights needed).
+# Tiny static web server for previewing the Black Diamond Atlas (no Python, Node or admin rights needed).
 #
 #   powershell -ExecutionPolicy Bypass -File serve.ps1          -> this computer only (http://localhost:8002)
 #   powershell -ExecutionPolicy Bypass -File serve.ps1 -Lan     -> also phones/tablets on your Wi-Fi

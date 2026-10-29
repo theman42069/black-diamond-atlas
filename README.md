@@ -1,6 +1,6 @@
-# Colliery Research Map
+# Black Diamond Atlas
 
-A map for finding what's left of Pennsylvania's old anthracite collieries. A companion to
+A map for finding what's left of Pennsylvania's old anthracite collieries ("black diamonds" was the old name for hard coal). A companion to
 [Anthracite Collieries of Pennsylvania](https://theman42069.github.io/anthracite-collieries/), but a separate site.
 
 ## What it does
@@ -19,8 +19,9 @@ A map for finding what's left of Pennsylvania's old anthracite collieries. A com
   disused and abandoned, plus the collieries site's own lines and old spurs to the breakers.
 - **Mine maps:** old mine maps of the Southern field, one coal seam at a time (Mammoth, Buck Mountain and
   about 28 more), laid over the map with a see-through slider.
-- **Mine hazards:** shafts, openings, refuse piles and other abandoned mine features from the state inventory;
-  red not yet reclaimed, grey reclaimed. Shown when zoomed in.
+- **Mine hazards:** the outline of every abandoned mine problem area (strip pits, banks, subsidence) plus shafts,
+  openings and other point features from the state inventory, updated monthly; red dots shafts, blue dots slopes;
+  amber other points; outlines red until reclaimed, then grey. Shown when zoomed in.
 - **Measure & notes:** a line's length and the ground profile along it; notes kept in the browser,
   downloadable as GeoJSON.
 
@@ -50,7 +51,7 @@ All imagery loads live from public servers; nothing is stored here.
 - Slope and ground heights: [USGS 3D Elevation Program](https://www.usgs.gov/3d-elevation-program)
 - Topo sheets: USGS Historical Topographic Map Collection, served by Esri
 - Mine maps: PA DEP, Southern Anthracite seam mosaics via PASDA
-- Mine hazards: PA DEP Abandoned Mine Land inventory, served by DCNR
+- Mine hazards: PA DEP Abandoned Mine Land inventory (monthly), via PASDA
 - Satellite and place search: Esri
 - Colliery pins and railroads: `data/collieries.geojson` and `data/railroads.geojson` from the
   Anthracite Collieries site (railroads from OpenStreetMap)

@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Colliery Research Map</title>
+  <title>Black Diamond Atlas</title>
   <meta name="description" content="A research map for finding traces of Pennsylvania's old anthracite collieries: LIDAR bare-earth relief, aerial photos from the 1940s to today, USGS topo maps back to the 1880s, elevation profiles and saved notes.">
   <link rel="icon" href="icons/headframe.svg" type="image/svg+xml">
   <meta name="theme-color" content="#16181b">
 
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Colliery Research Map">
+  <meta property="og:title" content="Black Diamond Atlas">
   <meta property="og:description" content="LIDAR, aerial photos from the 1940s to today and topo maps back to the 1880s, with tools for measuring, elevation profiles and notes.">
 
   <!-- Open connections to the map servers early, so the first images arrive sooner -->
@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://server.arcgisonline.com">
   <link rel="preconnect" href="https://historical1.arcgis.com">
   <link rel="preconnect" href="https://a.tiles.openrailwaymap.org">
-  <link rel="preconnect" href="https://conservationexplorer.dcnr.pa.gov">
+  <link rel="preconnect" href="https://mapservices.pasda.psu.edu">
   <link rel="preconnect" href="https://theman42069.github.io" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,10 +27,10 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="./" aria-label="Colliery Research Map, reset view">
+    <a class="brand" href="./" aria-label="Black Diamond Atlas, reset view">
       <img src="icons/headframe.svg" alt="" width="28" height="28">
       <span class="brand-text">
-        <span class="brand-title">Colliery Research Map</span>
+        <span class="brand-title">Black Diamond Atlas</span>
         <span class="brand-sub">LIDAR, old photos &amp; topo maps</span>
       </span>
     </a>
@@ -72,7 +72,7 @@
             <select id="mine-seam" aria-label="Coal seam"><option value="">Off</option></select>
           </label>
           <input type="range" id="mine-opacity" min="20" max="100" value="80" aria-label="How solid the mine maps are" hidden>
-          <label class="chip" title="Abandoned mine hazards from the state inventory: shafts, openings, highwalls and more. Red: not yet reclaimed. Zoom in to see them."><input type="checkbox" id="show-hazards"> ⚠ <span id="hazard-label">Mine hazards</span></label>
+          <label class="chip" title="Abandoned mine hazards from the state inventory (updated monthly): outlined problem areas (red, grey once reclaimed) plus dots: red shafts, blue slopes, amber other openings and features; faded once reclaimed. Zoom in to see them."><input type="checkbox" id="show-hazards"> ⚠ <span id="hazard-label">Mine hazards</span></label>
         </div>
       </div>
 
@@ -217,6 +217,6 @@
   </svg>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="js/app.js?v=14"></script>
+  <script src="js/app.js?v=17"></script>
 </body>
 </html>
