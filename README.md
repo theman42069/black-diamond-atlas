@@ -18,6 +18,7 @@ A map for finding what's left of Pennsylvania's old anthracite collieries ("blac
 - **On the map:** colliery pins and railroads: every line in OpenStreetMap (via OpenRailwayMap), in use,
   disused and abandoned, plus the collieries site's own lines and old spurs to the breakers. Click a
   thicker old line for its history: when it was built and abandoned, by which railroads, and the ICC filings.
+  Lavender dashes are lines missing from OpenStreetMap, traced by hand from the 1947 USGS topo (Mount Carmel area so far).
 - **Mine maps:** old mine maps of the Southern field, one coal seam at a time (Mammoth, Buck Mountain and
   about 28 more), laid over the map with a see-through slider.
 - **Mine hazards:** the outline of every abandoned mine problem area (strip pits, banks, subsidence) plus shafts,
@@ -43,6 +44,8 @@ Keys: `1`–`6` views, `T` time travel, `←` `→` years, `Space` play, `F` `S`
   Abandoned Rails by shape. Refresh with Scrapling: `tools/osm_old_rails.py data/rails-old.geojson` adds lines new to
   OpenStreetMap, then `tools/ar_scrape.py data/rails-old.geojson` and `tools/ar_match.py data/rails-old.geojson`
   attach the histories
+- `data/rails-traced.geojson` – old lines traced by hand from USGS topo sheets and checked against the LIDAR
+  (positions about 30–50 m)
 - `serve.ps1` – preview on this computer: `powershell -ExecutionPolicy Bypass -File serve.ps1` (opens on http://localhost:8002)
 
 No build step. Put the folder on any static host (for example its own GitHub Pages repository).
@@ -62,4 +65,5 @@ All imagery loads live from public servers; nothing is stored here.
 - Colliery pins and railroads: `data/collieries.geojson` and `data/railroads.geojson` from the
   Anthracite Collieries site (railroads from OpenStreetMap)
 - More railroads: [OpenRailwayMap](https://www.openrailwaymap.org/) tiles (CC-BY-SA), data from OpenStreetMap
+- Traced lines: USGS historical topographic maps (public domain)
 - Line histories: [Abandoned Rails](https://www.abandonedrails.com/) (facts and ICC filings, with a link to each line's page)

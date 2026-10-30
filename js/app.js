@@ -802,6 +802,20 @@
         }
       }).addTo(rails);
     }).catch(function () { /* the other rail layers still show */ });
+
+    // Lines missing from OpenStreetMap, traced by hand from old USGS topo sheets (data/rails-traced.geojson).
+    getJson('data/rails-traced.geojson').then(function (d) {
+      L.geoJSON(d, {
+        pane: 'railsOld',
+        attribution: 'Traced rails: USGS topographic maps',
+        style: { color: '#c9a7ff', weight: 3, opacity: 0.95, dashArray: '6 4' },
+        onEachFeature: function (f, layer) {
+          var p = f.properties;
+          layer.bindTooltip('<b>' + escapeHtml(p.name) + '</b><br>Gone; traced from the ' + escapeHtml(p.source) +
+            '<br><small>Position ' + escapeHtml(p.accuracy) + '</small>', { sticky: true, className: 'map-tip' });
+        }
+      }).addTo(rails);
+    }).catch(function () { /* the other rail layers still show */ });
   });
   function railHistory(h) {
     return '<b>' + escapeHtml(h.title) + '</b>' +
