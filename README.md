@@ -38,11 +38,11 @@ Keys: `1`–`6` views, `T` time travel, `←` `→` years, `Space` play, `F` `S`
 - `index.html` – the page
 - `css/style.css` – styles
 - `js/app.js` – the map and tools
-- `data/rails-old.geojson` – about 1,500 old rail lines in the coal region, exported from OpenStreetMap (ODbL),
-  86 of them with a line history (built/abandoned years, railroads, ICC abandonment filings) matched from
-  Abandoned Rails by shape (`tools/ar_scrape.py` then `tools/ar_match.py data/rails-old.geojson`, with Scrapling;
-  run them again after a re-export);
-  re-export with an Overpass query for `railway=abandoned|disused|razed|dismantled` to refresh
+- `data/rails-old.geojson` – about 2,800 old rail lines in and around the coal region, from OpenStreetMap (ODbL),
+  193 of them with a line history (built/abandoned years, railroads, ICC abandonment filings) matched from
+  Abandoned Rails by shape. Refresh with Scrapling: `tools/osm_old_rails.py data/rails-old.geojson` adds lines new to
+  OpenStreetMap, then `tools/ar_scrape.py data/rails-old.geojson` and `tools/ar_match.py data/rails-old.geojson`
+  attach the histories
 - `serve.ps1` – preview on this computer: `powershell -ExecutionPolicy Bypass -File serve.ps1` (opens on http://localhost:8002)
 
 No build step. Put the folder on any static host (for example its own GitHub Pages repository).

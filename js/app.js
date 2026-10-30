@@ -769,7 +769,7 @@
       }).addTo(rails);
     }).catch(function () { railsLoaded = false; });
 
-    // About 1,500 old lines (abandoned, disused, torn up) from OpenStreetMap, saved with this site
+    // About 2,800 old lines (abandoned, disused, torn up) from OpenStreetMap, saved with this site
     // (see data/rails-old.geojson). Drawn on a canvas, which stays quick with this many lines.
     // Some carry a line history (d.history[p.ar]): years, railroads and ICC abandonment filings from Abandoned Rails.
     getJson('data/rails-old.geojson').then(function (d) {
