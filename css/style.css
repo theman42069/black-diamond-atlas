@@ -298,6 +298,13 @@ kbd {
   font-family: var(--serif); font-size: 13px; box-shadow: var(--shadow);
 }
 .leaflet-tooltip.map-tip::before { display: none; }
+.rail-history .leaflet-popup-content-wrapper, .rail-history .leaflet-popup-tip {
+  background: var(--chrome); color: var(--text); box-shadow: var(--shadow);
+}
+.rail-history .leaflet-popup-content { font-family: var(--serif); font-size: 13px; max-height: 50vh; overflow-y: auto; }
+.rail-history .leaflet-popup-content p { margin: 8px 0; }
+.rail-history .leaflet-popup-content small { color: var(--text-soft); }
+.rail-history a { color: var(--accent); }
 
 [hidden] { display: none !important; }
 

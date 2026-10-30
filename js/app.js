@@ -771,27 +771,49 @@
 
     // About 1,500 old lines (abandoned, disused, torn up) from OpenStreetMap, saved with this site
     // (see data/rails-old.geojson). Drawn on a canvas, which stays quick with this many lines.
+    // Some carry a line history (d.history[p.ar]): years, railroads and ICC abandonment filings from Abandoned Rails.
     getJson('data/rails-old.geojson').then(function (d) {
       var STATUS = { abandoned: 'Abandoned', disused: 'Disused, track may remain', razed: 'Torn up' };
+      var history = d.history || [];
       L.geoJSON(d, {
         pane: 'railsOld',
         renderer: L.canvas({ pane: 'railsOld', tolerance: 6 }),
-        attribution: 'Old railroads &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors (ODbL)',
+        attribution: 'Old railroads &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors (ODbL); ' +
+          'line histories <a href="https://www.abandonedrails.com/">Abandoned Rails</a>',
         style: function (f) {
           var s = f.properties.status;
-          return s === 'disused' ? { color: '#9fd8e0', weight: 2.5, opacity: 0.9, dashArray: '8 4' }
+          var st = s === 'disused' ? { color: '#9fd8e0', weight: 2.5, opacity: 0.9, dashArray: '8 4' }
             : s === 'razed' ? { color: '#f4a261', weight: 3, opacity: 0.95, dashArray: '1 6', lineCap: 'round' }
             : { color: '#f4a261', weight: 2.5, opacity: 0.9, dashArray: '5 5' };
+          if (f.properties.ar !== undefined) { st.weight += 1; st.bubblingMouseEvents = false; } // has a history: click opens it
+          return st;
         },
         onEachFeature: function (f, layer) {
-          var p = f.properties;
-          layer.bindTooltip('<b>' + escapeHtml(p.name || 'Old railroad') + '</b>' +
+          var p = f.properties, h = history[p.ar];
+          var last = h && h.filings && h.filings[h.filings.length - 1];
+          var gone = h && (h.abandoned || (last && last.date && last.date.slice(-4)));
+          var years = h ? [h.built && 'built ' + h.built, gone && 'abandoned ' + gone].filter(Boolean).join(', ') : '';
+          layer.bindTooltip('<b>' + escapeHtml(p.name || (h && h.title) || 'Old railroad') + '</b>' +
             (p.railroad ? '<br>' + escapeHtml(p.railroad) : '') +
-            '<br>' + (STATUS[p.status] || 'Abandoned') + (p.kind ? ' · ' + escapeHtml(p.kind) : ''), { sticky: true, className: 'map-tip' });
+            '<br>' + (STATUS[p.status] || 'Abandoned') + (p.kind ? ' · ' + escapeHtml(p.kind) : '') +
+            (h ? '<br>' + escapeHtml(h.title) + (years ? ', ' + years : '') + '<br><small>Click for its history</small>' : ''),
+            { sticky: true, className: 'map-tip' });
+          if (h) layer.bindPopup(railHistory(h), { maxWidth: 340, className: 'rail-history' });
         }
       }).addTo(rails);
     }).catch(function () { /* the other rail layers still show */ });
   });
+  function railHistory(h) {
+    return '<b>' + escapeHtml(h.title) + '</b>' +
+      (h.railroads ? '<br><small>' + h.railroads.map(escapeHtml).join(' · ') + '</small>' : '') +
+      (h.built || h.abandoned ? '<p>' + [h.built && 'Built ' + h.built, h.abandoned && 'abandoned ' + h.abandoned].filter(Boolean).join(', ') + '</p>' : '') +
+      (h.filings || []).map(function (f) {
+        return '<p><b>ICC filing ' + escapeHtml(f.date || '') + '</b>' + (f.docket ? ', docket ' + escapeHtml(f.docket) : '') +
+          (f.miles ? ', ' + escapeHtml(f.miles) + ' mi' : '') + (f.text ? '<br><small>' + escapeHtml(f.text) + '</small>' : '') + '</p>';
+      }).join('') +
+      '<a href="' + escapeHtml(h.url) + '" target="_blank" rel="noopener">Photos and more on Abandoned Rails ↗</a>';
+  }
+
   $('show-rails').addEventListener('change', function (e) {
     if (e.target.checked) rails.addTo(map); else map.removeLayer(rails);
   });
