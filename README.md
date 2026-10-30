@@ -21,7 +21,9 @@ A map for finding what's left of Pennsylvania's old anthracite collieries ("blac
   about 28 more), laid over the map with a see-through slider.
 - **Mine hazards:** the outline of every abandoned mine problem area (strip pits, banks, subsidence) plus shafts,
   openings and other point features from the state inventory, updated monthly; red dots shafts, blue dots slopes;
-  amber other points; outlines red until reclaimed, then grey. Shown when zoomed in.
+  amber other points; outlines red until reclaimed, then grey. Shown when zoomed in. Shafts and slopes get a
+  30 m ring: checked against LIDAR pits, DEP's points sit a median 28 m from the real opening. Falls back to
+  DCNR's copy of the points when PASDA is down.
 - **Measure & notes:** a line's length and the ground profile along it; notes kept in the browser,
   downloadable as GeoJSON.
 

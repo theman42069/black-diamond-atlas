@@ -842,16 +842,24 @@
   // Abandoned mine hazards: PA DEP's Abandoned Mine Land inventory as published monthly on PASDA.
   // Layer 1 is the outline of each problem area (strip pits, banks, subsidence), layer 0 the point features
   // (shafts, openings, fires). Fetched for the view when zoomed in, every page, so nothing is left out.
+  // When PASDA is down, the points alone come from DCNR's copy of the inventory (same positions, no outlines).
   var AML = 'https://mapservices.pasda.psu.edu/server/rest/services/pasda/DEP/MapServer/';
+  var AML_BACKUP = 'https://conservationexplorer.dcnr.pa.gov/arcgis/rest/services/PA_Public/AML_Points/MapServer/0';
   var hazards = L.layerGroup();
   var hazardReq = 0;
 
-  function fetchAll(layerId, bbox, offset, got) {
-    return getJson(AML + layerId + '/query?where=1%3D1&geometryType=esriGeometryEnvelope&inSR=4326&outSR=4326' +
+  function fetchAll(layerUrl, bbox, offset, got) {
+    return getJson(layerUrl + '/query?where=1%3D1&geometryType=esriGeometryEnvelope&inSR=4326&outSR=4326' +
       '&returnGeometry=true&f=geojson&orderByFields=OBJECTID&resultRecordCount=1000&resultOffset=' + offset +
-      '&outFields=sf_name,sf_type,sf_status,sf_prior_1,sf_probl_1,height_ft,volume_cy,flow_gpm&geometry=' + bbox).then(function (d) {
-      got = got.concat(d.features || []);
-      return (d.features || []).length === 1000 ? fetchAll(layerId, bbox, offset + 1000, got) : got;
+      '&outFields=*&geometry=' + bbox).then(function (d) {
+      if (!d.features) throw new Error('no features');
+      d.features.forEach(function (f) { // DCNR spells the fields in capitals
+        var p = {};
+        Object.keys(f.properties).forEach(function (k) { p[k.toLowerCase()] = f.properties[k]; });
+        f.properties = p;
+      });
+      got = got.concat(d.features);
+      return d.features.length === 1000 ? fetchAll(layerUrl, bbox, offset + 1000, got) : got;
     });
   }
 
@@ -874,7 +882,12 @@
     }
     var b = map.getBounds(), req = ++hazardReq;
     var bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].map(function (v) { return v.toFixed(5); }).join(',');
-    Promise.all([fetchAll(1, bbox, 0, []), fetchAll(0, bbox, 0, [])]).then(function (r) {
+    Promise.race([
+      Promise.all([fetchAll(AML + 1, bbox, 0, []), fetchAll(AML + 0, bbox, 0, [])]),
+      new Promise(function (_, reject) { setTimeout(reject, 6000); }) // a stuck PASDA can hang 20s before failing
+    ]).catch(function () {
+      return fetchAll(AML_BACKUP, bbox, 0, []).then(function (pts) { return [[], pts]; });
+    }).then(function (r) {
       if (req !== hazardReq) return;
       hazards.clearLayers();
       var color = function (p) { return /complete/i.test(p.sf_status || '') ? '#9aa0a6' : '#e5484d'; };
@@ -894,7 +907,17 @@
           });
         },
         onEachFeature: function (f, layer) {
-          layer.bindTooltip(hazardTip(f.properties), { className: 'map-tip', direction: 'top', sticky: f.geometry.type !== 'Point' });
+          var tip = hazardTip(f.properties);
+          // Checked against LIDAR pits, DEP's shaft and slope points sit a median 28 m from the real opening,
+          // scattered in every direction (no shift to correct). The ring shows where to look.
+          if (f.geometry.type === 'Point' && /shaft|slope/i.test(f.properties.sf_probl_1 || '')) {
+            L.circle(layer.getLatLng(), {
+              radius: 30, weight: 1.5, dashArray: '4 4', fill: false, interactive: false,
+              color: /shaft/i.test(f.properties.sf_probl_1) ? '#e5484d' : '#3b82f6'
+            }).addTo(hazards);
+            tip += '<br><small>Recorded position, usually within 30 m (ring). Look for the pit in the LIDAR view.</small>';
+          }
+          layer.bindTooltip(tip, { className: 'map-tip', direction: 'top', sticky: f.geometry.type !== 'Point' });
         }
       }).addTo(hazards);
       $('hazard-label').textContent = 'Mine hazards (' + (r[0].length + r[1].length) + ')';
