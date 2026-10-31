@@ -146,7 +146,7 @@
       if (this._current && this._current._url === v.sharp) return;
       // A quarter-size preview first when nothing usable is on screen (first load or a new zoom level),
       // unless the sharp image was already fetched ahead of time.
-      var needPreview = (!this._current || this._current.zoom !== v.zoom) && !prefetched[v.sharp];
+      var needPreview = (!this._current || this._current.zoom !== v.zoom) && !prefetched[v.sharp] && v.preview !== v.sharp;
       this._load(needPreview ? v.preview : v.sharp, v.bounds, v.zoom, needPreview ? v.sharp : null);
     },
 
@@ -160,6 +160,7 @@
       var a = L.CRS.EPSG3857.project(nw), b = L.CRS.EPSG3857.project(se);
       var self = this;
       function urlAt(ratio) {
+        if (self.options.minRes) ratio = Math.min(ratio, (b.x - a.x) / (max.x - min.x) / self.options.minRes);
         var w = Math.min(4096, Math.round((max.x - min.x) * ratio)), h = Math.min(4096, Math.round((max.y - min.y) * ratio));
         return self._url + '?bbox=' + [a.x, b.y, b.x, a.y].map(function (v) { return v.toFixed(1); }).join(',') +
           '&bboxSR=3857&imageSR=3857&size=' + w + ',' + h + '&f=image' + self._extra;
@@ -237,8 +238,10 @@
     });
   }
 
+  // The hillshade has 1 m cells. Asking for finer pixels only gets blocks back, so it is fetched no finer
+  // than 1.3 map metres a pixel (1 m on the ground here) and the browser smooths it when zoomed in further.
   var lidarMake = exportLayer(PASDA + 'pasda/USGS_Hillshade2017_2020/MapServer/export', '&format=jpg', {
-    attribution: 'LIDAR: USGS 3DEP via <a href="https://www.pasda.psu.edu/">PASDA</a>'
+    minRes: 1.3, attribution: 'LIDAR: USGS 3DEP via <a href="https://www.pasda.psu.edu/">PASDA</a>'
   });
   var satelliteMake = tiles('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
     maxNativeZoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics'
