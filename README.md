@@ -44,7 +44,7 @@ Keys: `1`–`6` views, `T` time travel, `←` `→` years, `Space` play, `F` `S`
   Abandoned Rails by shape. Refresh with Scrapling: `tools/osm_old_rails.py data/rails-old.geojson` adds lines new to
   OpenStreetMap, then `tools/ar_scrape.py data/rails-old.geojson` and `tools/ar_match.py data/rails-old.geojson`
   attach the histories
-- `data/rails-traced.geojson` – old lines traced by hand from USGS topo sheets and checked against the LIDAR
+- `data/rails-traced.geojson` – old lines traced by hand from USGS topo sheets and checked against the LIDAR, plus short curved joins that close gaps where a mapped line stops just short of the next
   (positions about 30–50 m)
 - `serve.ps1` – preview on this computer: `powershell -ExecutionPolicy Bypass -File serve.ps1` (opens on http://localhost:8002)
 

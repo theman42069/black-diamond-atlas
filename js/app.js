@@ -806,7 +806,8 @@
       }).addTo(rails);
     }).catch(function () { /* the other rail layers still show */ });
 
-    // Lines missing from OpenStreetMap, traced by hand from old USGS topo sheets (data/rails-traced.geojson).
+    // Lines missing from OpenStreetMap, traced by hand from old USGS topo sheets, plus short joins (p.join, metres)
+    // that close gaps where a mapped line stops just short of the next (data/rails-traced.geojson).
     getJson('data/rails-traced.geojson').then(function (d) {
       L.geoJSON(d, {
         pane: 'railsOld',
@@ -814,8 +815,10 @@
         style: { color: '#c9a7ff', weight: 3, opacity: 0.95, dashArray: '6 4' },
         onEachFeature: function (f, layer) {
           var p = f.properties;
-          layer.bindTooltip('<b>' + escapeHtml(p.name) + '</b><br>Gone; traced from the ' + escapeHtml(p.source) +
-            '<br><small>Position ' + escapeHtml(p.accuracy) + '</small>', { sticky: true, className: 'map-tip' });
+          layer.bindTooltip(p.join
+            ? '<b>' + escapeHtml(p.name || 'Old railroad') + '</b><br>Short join closing a gap where the mapped line stops (' + p.join + ' m)'
+            : '<b>' + escapeHtml(p.name) + '</b><br>Gone; traced from the ' + escapeHtml(p.source) +
+              '<br><small>Position ' + escapeHtml(p.accuracy) + '</small>', { sticky: true, className: 'map-tip' });
         }
       }).addTo(rails);
     }).catch(function () { /* the other rail layers still show */ });
