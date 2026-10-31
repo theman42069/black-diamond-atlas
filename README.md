@@ -18,7 +18,7 @@ A map for finding what's left of Pennsylvania's old anthracite collieries ("blac
 - **On the map:** colliery pins and railroads: every line in OpenStreetMap (via OpenRailwayMap), in use,
   disused and abandoned, plus the collieries site's own lines and old spurs to the breakers. Click a
   thicker old line for its history: when it was built and abandoned, by which railroads, and the ICC filings.
-  Lavender dashes are lines missing from OpenStreetMap, traced by hand from the 1947 USGS topo (Mount Carmel to Ashland).
+  Lavender dashes are lines missing from OpenStreetMap, traced by hand from the 1947 USGS topos (Kulpmont to Centralia).
 - **Mine maps:** old mine maps of the Southern field, one coal seam at a time (Mammoth, Buck Mountain and
   about 28 more), laid over the map with a see-through slider.
 - **Mine hazards:** the outline of every abandoned mine problem area (strip pits, banks, subsidence) plus shafts,
