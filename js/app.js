@@ -723,6 +723,7 @@
   // A link pasted into this tab's address bar: go there (writeHash's replaceState doesn't fire this).
   window.addEventListener('hashchange', function () {
     var s = readHash();
+    if (s.older && stopByKey(s.older) < 0) sheetsFor = null;   // fetch the sheet list again, even after a short move
     map.setView([s.lat, s.lng], s.zoom);
     if (s.ground !== state.ground) setGround(s.ground);
     opacity.value = state.opacity = s.opacity;
@@ -1491,17 +1492,18 @@
   }
 
   // Another tab saved notes: take its list, so saving here doesn't wipe what was added there.
-  // If a note is open here, the list is updated under it (its Save then keeps the other tab's notes too) and
-  // redrawn only once it closes, so the typing isn't thrown away.
+  // A note open here stays open with its typing: it takes the place of its copy in the new list (only the first
+  // at that spot, since two notes can share one) and its pin is kept while the others are redrawn.
   window.addEventListener('storage', function (e) {
     if (e.key !== NOTES_KEY) return;
-    var editing = notes.filter(function (n) { return n.marker && n.marker.isPopupOpen(); })[0];
-    notes = loadNotes().map(function (n) { return editing && n.lat === editing.lat && n.lng === editing.lng ? editing : n; });
-    if (!editing) renderNotes();
-    else {
-      if (notes.indexOf(editing) < 0) notes.push(editing);   // deleted there while being edited here: keep it
-      map.once('popupclose', function () { setTimeout(renderNotes); });
-    }
+    var editing = notes.filter(function (n) { return n.marker && n.marker.isPopupOpen(); })[0], placed = false;
+    notes = loadNotes().map(function (n) {
+      if (!editing || placed || n.lat !== editing.lat || n.lng !== editing.lng) return n;
+      placed = true;
+      return editing;
+    });
+    if (editing && !placed) notes.push(editing);   // deleted there while being edited here: keep it
+    renderNotes(editing);
   });
 
   function saveNotes() {
@@ -1531,13 +1533,14 @@
     return div;
   }
 
-  function renderNotes() {
-    notesLayer.clearLayers();
+  // keep: a note whose pin (and open popup) is left as it is.
+  function renderNotes(keep) {
+    notesLayer.eachLayer(function (m) { if (!keep || m !== keep.marker) notesLayer.removeLayer(m); });
     var list = $('notes');
     list.innerHTML = '';
     notes.forEach(function (n) {
-      var m = L.marker([n.lat, n.lng], { icon: noteIcon, title: n.text || 'Note' }).addTo(notesLayer);
-      m.bindPopup(function () { return notePopup(n, m); }, { maxWidth: 280 });
+      var m = n === keep ? n.marker : L.marker([n.lat, n.lng], { icon: noteIcon, title: n.text || 'Note' }).addTo(notesLayer);
+      if (n !== keep) m.bindPopup(function () { return notePopup(n, m); }, { maxWidth: 280 });
       n.marker = m;
       var li = document.createElement('li');
       li.innerHTML = '<button type="button">' + escapeHtml(n.text || '(no text yet)') +
