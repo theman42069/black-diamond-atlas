@@ -725,7 +725,10 @@
     var s = readHash();
     map.setView([s.lat, s.lng], s.zoom);
     if (s.ground !== state.ground) setGround(s.ground);
-    if (!s.older || s.older === state.older) return;
+    opacity.value = state.opacity = s.opacity;
+    setMode(s.mode);
+    if (!s.older) { if (timeOn) setTime(false); return; }
+    if (s.older === state.older) return;
     pendingKey = s.older;   // a sheet from somewhere else is picked once moveend loads that area's sheets
     if (!timeOn) setTime(true);
     else if (stopByKey(s.older) >= 0) { pendingKey = null; setStop(stopByKey(s.older)); }
@@ -1488,8 +1491,17 @@
   }
 
   // Another tab saved notes: take its list, so saving here doesn't wipe what was added there.
+  // If a note is open here, the list is updated under it (its Save then keeps the other tab's notes too) and
+  // redrawn only once it closes, so the typing isn't thrown away.
   window.addEventListener('storage', function (e) {
-    if (e.key === NOTES_KEY) { notes = loadNotes(); renderNotes(); }
+    if (e.key !== NOTES_KEY) return;
+    var editing = notes.filter(function (n) { return n.marker && n.marker.isPopupOpen(); })[0];
+    notes = loadNotes().map(function (n) { return editing && n.lat === editing.lat && n.lng === editing.lng ? editing : n; });
+    if (!editing) renderNotes();
+    else {
+      if (notes.indexOf(editing) < 0) notes.push(editing);   // deleted there while being edited here: keep it
+      map.once('popupclose', function () { setTimeout(renderNotes); });
+    }
   });
 
   function saveNotes() {
