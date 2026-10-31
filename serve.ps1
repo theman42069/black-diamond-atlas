@@ -3,7 +3,7 @@
 #   powershell -ExecutionPolicy Bypass -File serve.ps1          -> this computer only (http://localhost:8002)
 #   powershell -ExecutionPolicy Bypass -File serve.ps1 -Lan     -> also phones/tablets on your Wi-Fi
 #
-# Or just double-click serve-phone.bat. Press Ctrl+C (or close the window) to stop.
+# Press Ctrl+C (or close the window) to stop.
 param(
   [int]$Port = 8002,
   [switch]$Lan

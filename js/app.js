@@ -1294,6 +1294,8 @@
     return utifReady || (utifReady = new Promise(function (ok, fail) {
       var s = document.createElement('script');
       s.src = 'https://cdn.jsdelivr.net/npm/utif@3.1.0/UTIF.js';
+      s.integrity = 'sha384-RyBmXHdfZ/Uon+ud+/AqSyWpUWnKYt2tkRG/P4gWoRUGDU+qIAV3tGBPNlYTBZEF';   // refuse a changed copy
+      s.crossOrigin = 'anonymous';
       s.onload = ok;
       s.onerror = function () { utifReady = null; fail(); };
       document.head.appendChild(s);
@@ -1567,6 +1569,7 @@
       (JSON.parse(t).features || []).forEach(function (f) {
         if (!f.geometry || f.geometry.type !== 'Point') return;
         var c = f.geometry.coordinates, p = f.properties || {};
+        if (!c || !isFinite(c[0]) || !isFinite(c[1])) return;   // Leaflet can't place it, and would stop the list
         notes.push({ lat: +c[1], lng: +c[0], text: String(p.note || p.name || p.description || ''), date: String(p.date || '') });
       });
       saveNotes();

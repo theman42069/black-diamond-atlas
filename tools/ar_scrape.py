@@ -3,27 +3,11 @@
 import json, re, sys, time, html as H
 from pathlib import Path
 from scrapling.fetchers import Fetcher
+from rails_lib import decode
 
 HERE = Path(__file__).parent
 OLD = Path(sys.argv[1])  # path to data/rails-old.geojson
 BASE = 'https://www.abandonedrails.com/'
-
-
-def decode(s):
-    pts, i, lat, lng = [], 0, 0, 0
-    while i < len(s):
-        vals = []
-        for _ in range(2):
-            shift = res = 0
-            while True:
-                b = ord(s[i]) - 63; i += 1
-                res |= (b & 0x1f) << shift; shift += 5
-                if b < 0x20: break
-            vals.append(~(res >> 1) if res & 1 else res >> 1)
-        lat += vals[0]; lng += vals[1]
-        pts.append((lng / 1e5, lat / 1e5))
-    return pts
-
 
 old = json.loads(OLD.read_text())
 xs = [c[0] for f in old['features'] for c in f['geometry']['coordinates']]
@@ -34,8 +18,7 @@ print('area', area)
 page = Fetcher.get(BASE + 'pennsylvania').body.decode(errors='ignore')
 lines = []
 for m in re.finditer(r'<section name="abndnmnt"([^>]*)>', page):
-    a = dict(re.findall(r'data-([a-z]+)=(?:"([^"]*)"|\'([^\']*)\')', m.group(1)) and
-             [(k, v or w) for k, v, w in re.findall(r'data-([a-z]+)=(?:"([^"]*)"|\'([^\']*)\')', m.group(1))])
+    a = {k: v or w for k, v, w in re.findall(r'data-([a-z]+)=(?:"([^"]*)"|\'([^\']*)\')', m.group(1))}
     routes = [decode(r) for r in json.loads(H.unescape(a.get('routes', '[]')) or '[]') if r]
     pts = [p for r in routes for p in r]
     if not pts: continue

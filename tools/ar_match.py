@@ -2,6 +2,7 @@
 # route (>= 60% of the line's points within 50 m). Their route geometry is used only for matching, not saved.
 import json, math, sys
 from pathlib import Path
+from rails_lib import names_agree
 
 HERE = Path(__file__).parent
 OLD = Path(sys.argv[1])
@@ -32,17 +33,6 @@ for s in segs:
     for gx in range(int(s[3][0] // G), int(s[3][2] // G) + 1):
         for gy in range(int(s[3][1] // G), int(s[3][3] // G) + 1):
             grid.setdefault((gx, gy), []).append(s)
-
-GENERIC = set('branch railroad rail road railway line track industrial the and of junction pa secondary running spur'.split())
-def words(s): return {w for w in __import__('re').findall(r'[a-z]+', (s or '').lower()) if w not in GENERIC and len(w) > 2}
-
-def names_agree(p, l):
-    # A neighbouring line in the same valley can run within 50 m. When the OSM line carries its own railroad-style
-    # name, it must share a real word with the history; trails and roads on an old grade are kept.
-    name = ' '.join(filter(None, [p.get('name'), p.get('railroad')]))
-    if not __import__('re').search(r'(?i)branch|rail ?road|railway|track|line\b', name) or __import__('re').search(r'(?i)trail', name):
-        return True
-    return bool(words(name) & words(' '.join([l['title'], l['between'] or '', l['slug'].replace('-', ' ')] + l['railroads'])))
 
 used = {}
 for f in old['features']:

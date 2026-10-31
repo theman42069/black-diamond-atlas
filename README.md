@@ -18,7 +18,8 @@ A map for finding what's left of Pennsylvania's old anthracite collieries ("blac
 - **On the map:** colliery pins and railroads: every line in OpenStreetMap (via OpenRailwayMap), in use,
   disused and abandoned, plus the collieries site's own lines and old spurs to the breakers. Click a
   thicker old line for its history: when it was built and abandoned, by which railroads, and the ICC filings.
-  Lavender dashes are lines missing from OpenStreetMap, traced by hand from the 1947 USGS topos (Kulpmont to Centralia).
+  Lavender dashes are lines missing from OpenStreetMap, traced by hand from the 1947 USGS topos (Kulpmont to Centralia), and short
+  curved joins where a mapped line stops just short of the next one, across the whole map.
 - **Mine maps:** old mine maps of the Southern field, one coal seam at a time (Mammoth, Buck Mountain and
   about 28 more), laid over the map with a see-through slider.
 - **Mine hazards:** the outline of every abandoned mine problem area (strip pits, banks, subsidence) plus shafts,
@@ -43,7 +44,7 @@ Keys: `1`–`6` views, `T` time travel, `←` `→` years, `Space` play, `F` `S`
   193 of them with a line history (built/abandoned years, railroads, ICC abandonment filings) matched from
   Abandoned Rails by shape. Refresh with Scrapling: `tools/osm_old_rails.py data/rails-old.geojson` adds lines new to
   OpenStreetMap, then `tools/ar_scrape.py data/rails-old.geojson` and `tools/ar_match.py data/rails-old.geojson`
-  attach the histories
+  attach the histories (their shared helpers are in `tools/rails_lib.py`; check them with `python tools/test_rails_lib.py`)
 - `data/rails-traced.geojson` – old lines traced by hand from USGS topo sheets and checked against the LIDAR, plus short curved joins that close gaps where a mapped line stops just short of the next
   (positions about 30–50 m)
 - `serve.ps1` – preview on this computer: `powershell -ExecutionPolicy Bypass -File serve.ps1` (opens on http://localhost:8002)

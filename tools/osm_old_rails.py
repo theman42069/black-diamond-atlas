@@ -23,11 +23,15 @@ for (s, w, n, e) in [(y0, x0, ym, xm), (y0, xm, ym, x1), (ym, x0, y1, xm), (ym, 
         'abandoned:railway', 'disused:railway', 'razed:railway', 'dismantled:railway', 'removed:railway', 'railway:historic')) + \
         ''.join(f'way["railway"="{v}"]({B});' for v in STATUS) + ');out geom;'
     for attempt in range(5):
-        r = Fetcher.post('https://overpass-api.de/api/interpreter', data={'data': q}, timeout=300)
-        if r.status == 200 and r.body[:1] == b'{':
+        try:  # a timeout raises instead of answering; retry it like an error status
+            r = Fetcher.post('https://overpass-api.de/api/interpreter', data={'data': q}, timeout=300)
+            status = r.status
+        except Exception as e:
+            r, status = None, type(e).__name__
+        if r and r.status == 200 and r.body[:1] == b'{':
             for el in json.loads(r.body)['elements']: els[el['id']] = el
             print('tile', B, 'ok'); break
-        print('tile', B, 'status', r.status, 'retry', attempt); time.sleep(30 * (attempt + 1))
+        print('tile', B, 'status', status, 'retry', attempt); time.sleep(30 * (attempt + 1))
     else:
         sys.exit('Overpass failed')
 els = list(els.values())
