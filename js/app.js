@@ -670,7 +670,10 @@
     if (!playing) return;
     if (stopIndex >= stops.length - 1) { stopPlay(); return; }
     var layer = setStop(stopIndex + 1);
-    var next = function () { clearTimeout(playTimer); playTimer = setTimeout(playStep, 1300); };
+    var next = function () {
+      if (layer !== olderLayer) return;   // a year play already moved past, loading late
+      clearTimeout(playTimer); playTimer = setTimeout(playStep, 1300);
+    };
     layer.once('load', next);
     playTimer = setTimeout(playStep, 6000);   // don't wait forever on a slow server
   }
@@ -717,6 +720,16 @@
     }, 200);
   }
   map.on('moveend', writeHash);
+  // A link pasted into this tab's address bar: go there (writeHash's replaceState doesn't fire this).
+  window.addEventListener('hashchange', function () {
+    var s = readHash();
+    map.setView([s.lat, s.lng], s.zoom);
+    if (s.ground !== state.ground) setGround(s.ground);
+    if (!s.older || s.older === state.older) return;
+    pendingKey = s.older;   // a sheet from somewhere else is picked once moveend loads that area's sheets
+    if (!timeOn) setTime(true);
+    else if (stopByKey(s.older) >= 0) { pendingKey = null; setStop(stopByKey(s.older)); }
+  });
 
   // ---------- Pins, railroads, place names ----------
 
@@ -1471,6 +1484,11 @@
       return Array.isArray(v) ? v.filter(function (n) { return n && isFinite(n.lat) && isFinite(n.lng); }) : [];
     } catch (e) { return []; }
   }
+
+  // Another tab saved notes: take its list, so saving here doesn't wipe what was added there.
+  window.addEventListener('storage', function (e) {
+    if (e.key === NOTES_KEY) { notes = loadNotes(); renderNotes(); }
+  });
 
   function saveNotes() {
     writeStore(NOTES_KEY, JSON.stringify(notes.map(function (n) {
