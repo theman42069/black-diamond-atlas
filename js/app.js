@@ -703,7 +703,7 @@
   function readHash() {
     var p = location.hash.replace(/^#/, '').split('/');
     var s = { zoom: +p[0], lat: +p[1], lng: +p[2], ground: p[3] || 'lidar', older: p[4] || '',
-      opacity: +p[5] || 75, mode: /^(fade|swipe|blink)$/.test(p[6]) ? p[6] : 'fade' };
+      opacity: Math.min(100, Math.max(10, +p[5] || 75)), mode: /^(fade|swipe|blink)$/.test(p[6]) ? p[6] : 'fade' };
     if (!isFinite(s.zoom) || !isFinite(s.lat) || !isFinite(s.lng) || !p[2]) {
       s.lat = START.lat; s.lng = START.lng; s.zoom = START.zoom;
     }
@@ -996,6 +996,14 @@
   var results = [];
   var activeResult = -1;
   var searchTimer = null, searchReq = 0;
+  var places = [], placesAsked = false;   // data/places.json, fetched the first time something is searched
+  function loadPlaces() {
+    placesAsked = true;
+    getJson('data/places.json').then(function (d) {
+      places = d.map(function (r) { return { name: r[0], kind: r[1], latlng: L.latLng(r[2], r[3]), plain: plain(r[0]) }; });
+      if (searchInput.value.trim().length >= 2) runSearch();
+    }).catch(function () { placesAsked = false; });
+  }
 
   function parseCoords(q) {
     var m = /^\s*(-?\d{1,2}(?:\.\d+)?)\s*[,\s]\s*(-?\d{1,3}(?:\.\d+)?)\s*$/.exec(q);
@@ -1029,12 +1037,17 @@
     results = [];
     activeResult = -1;
     if (q.length < 2) { renderResults(); return; }
+    if (!placesAsked) loadPlaces();
     var ll = parseCoords(q);
     if (ll) results.push({ text: ll.lat.toFixed(5) + ', ' + ll.lng.toFixed(5), kind: 'Coordinates', latlng: ll });
     var want = plain(q);
     sites.filter(function (s) { return s.plain.indexOf(want) !== -1; })
       .sort(function (a, b) { return a.plain.indexOf(want) - b.plain.indexOf(want) || a.name.localeCompare(b.name); })
       .slice(0, 6).forEach(function (s) { results.push({ text: s.name, kind: 'Colliery', latlng: s.latlng, zoom: 16 }); });
+    // Patch towns, old stations and mines from USGS place names, many of them missing from the address search
+    places.filter(function (p) { return p.plain.indexOf(want) !== -1; })
+      .sort(function (a, b) { return a.plain.indexOf(want) - b.plain.indexOf(want) || a.name.localeCompare(b.name); })
+      .slice(0, 5).forEach(function (p) { results.push({ text: p.name, kind: p.kind, latlng: p.latlng, zoom: 16 }); });
     renderResults(ll ? '' : 'Searching…');
     if (ll) return;
     getJson(GEOCODER + 'suggest?f=json&maxSuggestions=5&searchExtent=' + PA_EXTENT + '&location=-76.4,40.8&text=' + encodeURIComponent(q))

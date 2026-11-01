@@ -14,7 +14,8 @@ A map for finding what's left of Pennsylvania's old anthracite collieries ("blac
   filled or hauled away in between stands out.
 - **This spot:** click anywhere for the coordinates, ground height, the PennPilot aerial photos of that spot
   from the 1930s–70s, and links to the same spot in Google Maps, Google Earth, Bing and USGS topoView.
-- **Search:** collieries, towns, street addresses or coordinates.
+- **Search:** collieries, towns, street addresses or coordinates, and patch towns, old stations and mines
+  from the USGS place names, including ones that are gone.
 - **On the map:** colliery pins and railroads: every line in OpenStreetMap (via OpenRailwayMap), in use,
   disused and abandoned, plus the collieries site's own lines and old spurs to the breakers. Click a
   thicker old line for its history: when it was built and abandoned, by which railroads, and the ICC filings.
@@ -47,6 +48,8 @@ Keys: `1`–`6` views, `T` time travel, `←` `→` years, `Space` play, `F` `S`
   attach the histories (their shared helpers are in `tools/rails_lib.py`; check them with `python tools/test_rails_lib.py`)
 - `data/rails-traced.geojson` – old lines traced by hand from USGS topo sheets and checked against the LIDAR, plus short curved joins that close gaps where a mapped line stops just short of the next
   (positions about 30–50 m)
+- `data/places.json` – about 2,300 villages, patch towns, old stations, mines and post offices in the anthracite counties, for
+  search, from the USGS place names (GNIS, 2021 file, the last with mines and stations). Rebuild: `tools/gnis_places.py`
 - `serve.ps1` – preview on this computer: `powershell -ExecutionPolicy Bypass -File serve.ps1` (opens on http://localhost:8002)
 
 No build step. Put the folder on any static host (for example its own GitHub Pages repository).
