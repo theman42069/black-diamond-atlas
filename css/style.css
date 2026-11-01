@@ -15,7 +15,7 @@
   --sans: "Source Sans 3", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --panel-w: 380px;
   --radius: 8px;
-  --shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  --shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
   color-scheme: dark;
 }
 
@@ -388,4 +388,19 @@ kbd {
 /* "Reduce motion" set on the device: no fades or sliding. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+/* ---------- One panel for the map controls ---------- */
+/* The view, show-on-map and mining rows share one panel, split by hairlines, instead of floating as three pills. */
+.map-top {
+  right: auto; max-width: calc(100% - 64px); flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 0;
+  padding: 3px; pointer-events: auto; background: var(--overlay-bg); border: 1px solid var(--border); border-radius: 16px;
+  box-shadow: var(--shadow); backdrop-filter: blur(6px);
+}
+.map-top .chips { background: none; border: 0; border-radius: 0; box-shadow: none; backdrop-filter: none; padding: 3px; }
+.map-top .chips + .chips { border-top: 1px solid var(--border); }
+.map-top .extras { align-self: stretch; }
+/* Only the chosen view is solid gold; things switched on get a quiet gold tint. */
+.map-top .extras .chip:has(input:checked), .map-top .mines .chip:has(input:checked) {
+  background: rgba(212, 162, 76, 0.16); color: var(--accent);
 }
