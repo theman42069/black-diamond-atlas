@@ -307,6 +307,35 @@
       hint: 'The newest leaf-off photos, sharp enough to pick out foundations and rail beds.', make: pemaTiles('PEMAImagery2021_2023cache') }
   ];
 
+  // Sanborn fire-insurance maps Penn State has georeferenced in the coal region, offered where they cover the middle of
+  // the map. Pottsville is the full map; the Luzerne ones are only the atlases' index sheets. Penn State posts none after 1925.
+  function sanbornStop(key, owner, service, year, label, town, w, s, e, n) {
+    var bounds = L.latLngBounds([s, w], [n, e]);
+    return {
+      key: key, year: year, label: label, kind: 'map', bounds: bounds,
+      name: town ? 'Sanborn map, ' + town : 'Sanborn index, Luzerne & Lackawanna',
+      hint: town ? 'Fire-insurance map: every building, what it was used for and what it was built of.' :
+        'The index sheets of the Sanborn atlases: town blocks and the numbers of the detailed sheets, which are in ' +
+        'Penn State\'s Sanborn collection. Only the towns were mapped.',
+      make: tiles('https://tiles.arcgis.com/tiles/' + owner + '/arcgis/rest/services/' + service + '/MapServer/tile/{z}/{y}/{x}', {
+        bounds: bounds, maxNativeZoom: 19,
+        attribution: '<a href="https://libraries.psu.edu/about/collections/sanborn-fire-insurance-maps">Sanborn maps</a>, Penn State University Libraries'
+      })
+    };
+  }
+  var LUZ = '6EuFgO4fLTqfNOhu';
+  var SANBORN = [
+    sanbornStop('sbpotts1903', 'l8WMRXQvoma7xG3I', 'Pottsville_1903', 1903, '1903', 'Pottsville', -76.2193, 40.6693, -76.1659, 40.7013),
+    sanbornStop('sbluz1884', LUZ, 'Luzern1884_1885_mosaic_tilepackage', 1884.5, '1884–85', null, -76.1555, 40.9447, -75.4932, 41.5760),
+    sanbornStop('sbluz1888', LUZ, 'Luzerne1888_1889_mosaic_tilepackage', 1888.5, '1888–89', null, -76.0202, 41.1903, -75.6037, 41.4616),
+    sanbornStop('sbluz1890', LUZ, 'Luzerne1890_1894_mosaic_tilepackage', 1892, '1890–94', null, -76.1556, 40.9451, -75.4631, 41.6526),
+    sanbornStop('sbluz1895', LUZ, 'Luzern1895_1899_mosaic__tilepackage', 1897, '1895–99', null, -76.1552, 40.9441, -75.4626, 41.6616),
+    sanbornStop('sbluz1900', LUZ, 'Luzern1900_1904_mosaic_tilepackage', 1902, '1900–04', null, -76.1581, 40.9450, -75.4627, 41.6618),
+    sanbornStop('sbluz1905', LUZ, 'Luzern1905_1909_mosaic_tilepackage', 1907, '1905–09', null, -76.1584, 40.9390, -75.4586, 41.6597),
+    sanbornStop('sbluz1910', LUZ, 'Luzerne1910_1919_mosaic_tilepackage', 1914.5, '1910–19', null, -76.2328, 40.9370, -75.4506, 41.6612),
+    sanbornStop('sbluz1920', LUZ, 'Luzern1920_1925_mosaic_tilepackage', 1922.5, '1920–25', null, -76.0211, 40.9379, -75.4736, 41.6020)
+  ];
+
   // One historical USGS topo sheet, shown alone.
   function sheetStop(s) {
     var rule = encodeURIComponent(JSON.stringify({ mosaicMethod: 'esriMosaicLockRaster', lockRasterIds: [s.id] }));
@@ -535,11 +564,14 @@
       var current = stops[stopIndex] && stops[stopIndex].key;
       var currentYear = stops[stopIndex] && stops[stopIndex].year;
       stops = Object.keys(byYear).map(function (y) { return sheetStop(byYear[y]); }).concat(FIXED_STOPS)
+        .concat(SANBORN.filter(function (s) { return s.bounds.contains(c); }))
         .sort(function (a, b) { return a.year - b.year; });
       renderTicks();
       if (!timeOn) return;
       // Keep the same view if it's still here; a sheet from elsewhere becomes this area's sheet nearest its year.
-      var keep = first && !pendingKey && !userChose ? 0 : stopByKey(pendingKey || current);   // first time: the oldest map
+      var oldest = 0;
+      while (stops[oldest + 1] && stops[oldest].bounds) oldest++;   // a Sanborn map covers only a town, so not one of those
+      var keep = first && !pendingKey && !userChose ? oldest : stopByKey(pendingKey || current);   // first time: the oldest map
       if (keep < 0) {
         keep = 0;
         stops.forEach(function (s, i) { if (Math.abs(s.year - currentYear) < Math.abs(stops[keep].year - currentYear)) keep = i; });

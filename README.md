@@ -8,7 +8,8 @@ A map for finding what's left of Pennsylvania's old anthracite collieries ("blac
 - **Views (chips on the map):** LIDAR bare-earth relief (2017–20), LIDAR + photo (the satellite photo shaded
   by the relief), leaf-off photos (2021–23), slope, satellite, or streets.
 - **Time travel (bar at the bottom of the map):** a slider of older views laid over the ground view: the USGS topo sheets for wherever
-  the map is (back to the 1880s), aerial photos from the 1980s, 1990s and 2004–2023, and the 2006–08 LIDAR.
+  the map is (back to the 1880s), Penn State's Sanborn fire-insurance maps where they cover it (Pottsville 1903; the
+  Luzerne County index sheets 1884–1925), aerial photos from the 1980s, 1990s and 2004–2023, and the 2006–08 LIDAR.
   Show it faded, with a swipe line, or blinking; or press play to step through the years.
 - **What changed?:** blinks the 2006–08 LIDAR over the 2017–20 one, so ground that was dug,
   filled or hauled away in between stands out.
