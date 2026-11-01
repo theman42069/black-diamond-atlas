@@ -20,6 +20,9 @@
   var UNITS_KEY = 'researchMap:units';
   var START = { lat: 40.79, lng: -76.56, zoom: 14 };   // Shamokin
   var PA_EXTENT = '-80.6,39.7,-74.6,42.3';
+  // Colours for lines and dots Leaflet draws itself, read from the CSS tokens so there is one place to change them.
+  var TOKENS = getComputedStyle(document.documentElement);
+  var ACCENT = TOKENS.getPropertyValue('--accent').trim(), CHROME = TOKENS.getPropertyValue('--chrome').trim();
   var UNIT_CHOICES = {
     mi: { big: 'mi', bigM: 1609.34, small: 'ft', smallM: 0.3048 },
     km: { big: 'km', bigM: 1000, small: 'm', smallM: 1 }
@@ -781,7 +784,7 @@
       var slug = p.id ? slugify(p.id) : slugify(p.name);
       sites.push({ name: p.name, latlng: ll, plain: plain(p.name) });
       L.circleMarker(ll, {
-        radius: 7, color: '#16181b', weight: 2, fillOpacity: 0.95, bubblingMouseEvents: false,
+        radius: 7, color: CHROME, weight: 2, fillOpacity: 0.95, bubblingMouseEvents: false,
         fillColor: FIELD_COLORS[String(p.field || '').toLowerCase()] || '#9aa0a6'
       }).bindTooltip(escapeHtml(p.name), { className: 'map-tip', direction: 'top', offset: [0, -6] })
         .bindPopup('<b>' + escapeHtml(p.name) + '</b><br><a href="' + COLLIERIES_SITE + '#' + encodeURIComponent(slug) +
@@ -997,7 +1000,7 @@
         pointToLayer: function (f, ll) {
           var p = f.properties, kind = p.sf_probl_1 || '';
           return L.circleMarker(ll, {
-            radius: 6, weight: 2, color: '#16181b', bubblingMouseEvents: false,
+            radius: 6, weight: 2, color: CHROME, bubblingMouseEvents: false,
             fillOpacity: /complete/i.test(p.sf_status || '') ? 0.35 : 0.95,
             fillColor: /shaft/i.test(kind) ? '#e5484d' : /slope/i.test(kind) ? '#3b82f6' : '#f5a524'
           });
@@ -1445,7 +1448,7 @@
   // ---------- Measure and ground profile ----------
 
   var route = [];
-  var routeLine = L.polyline([], { color: '#d4a24c', weight: 3, dashArray: '6 4', interactive: false }).addTo(map);
+  var routeLine = L.polyline([], { color: ACCENT, weight: 3, dashArray: '6 4', interactive: false }).addTo(map);
   var routeDots = L.layerGroup().addTo(map);
   var profileMarker = null;
   var profileReq = 0;
@@ -1459,7 +1462,7 @@
   function addMeasurePoint(ll) {
     route.push(ll);
     routeLine.setLatLngs(route);
-    L.circleMarker(ll, { radius: 4, color: '#d4a24c', fillColor: '#16181b', fillOpacity: 1, weight: 2, interactive: false }).addTo(routeDots);
+    L.circleMarker(ll, { radius: 4, color: ACCENT, fillColor: CHROME, fillOpacity: 1, weight: 2, interactive: false }).addTo(routeDots);
     $('measure-out').hidden = false;
     $('measure-total').textContent = route.length < 2 ? 'Now click a second point.' : 'Length: ' + fmtDistance(routeLength());
     if (route.length >= 2) loadProfile();
@@ -1523,7 +1526,7 @@
       var p = pts.reduce(function (a, b) { return Math.abs(b.d - d) < Math.abs(a.d - d) ? b : a; });
       cursor.setAttribute('x1', x(p.d)); cursor.setAttribute('x2', x(p.d)); cursor.setAttribute('visibility', 'visible');
       read.textContent = fmtDistance(p.d) + ' along: ' + fmtHeight(p.h);
-      if (!profileMarker) profileMarker = L.circleMarker(p.ll, { radius: 6, color: '#fff', fillColor: '#d4a24c', fillOpacity: 1, interactive: false }).addTo(map);
+      if (!profileMarker) profileMarker = L.circleMarker(p.ll, { radius: 6, color: '#fff', fillColor: ACCENT, fillOpacity: 1, interactive: false }).addTo(map);
       profileMarker.setLatLng(p.ll);
     });
   }

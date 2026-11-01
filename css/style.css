@@ -10,7 +10,21 @@
   --muted: #a9a294;
   --accent: #d4a24c;
   --accent-ink: #1a1408;
+  --accent-tint: rgba(212, 162, 76, 0.16);   /* a layer switched on: quieter than the solid gold of the chosen view */
   --overlay-bg: rgba(22, 24, 27, 0.94);
+  --map-grid: #33363b;                       /* lines of the grey grid shown while the map draws */
+  --viewer-bg: #0d0e10;
+  --note: #5fd38d;                           /* your own notes on the map */
+  /* Timeline ticks, by kind of older view */
+  --kind-map: #b98b52;
+  --kind-photo: #6fa8c9;
+  --kind-lidar: #c9c9c9;
+  /* Leaflet's popups are light, so the note popup inside one uses light-theme greys */
+  --popup-line: #bbb;
+  --popup-muted: #666;
+  --popup-btn: #f2f2f2;
+  --popup-btn-ink: #222;
+  --popup-btn-line: #ccc;
   --serif: "Libre Baskerville", Georgia, "Times New Roman", serif;
   --sans: "Source Sans 3", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --panel-w: 380px;
@@ -88,8 +102,8 @@ button { font: inherit; }
 .stage { position: relative; flex: 1 1 auto; min-width: 0; }
 /* Grey grid while pieces of the map are still being drawn, so it reads as loading rather than broken. */
 #map {
-  position: absolute; inset: 0; background-color: #2a2d31;
-  background-image: linear-gradient(#33363b 1px, transparent 1px), linear-gradient(90deg, #33363b 1px, transparent 1px);
+  position: absolute; inset: 0; background-color: var(--chrome-3);
+  background-image: linear-gradient(var(--map-grid) 1px, transparent 1px), linear-gradient(90deg, var(--map-grid) 1px, transparent 1px);
   background-size: 32px 32px;
 }
 .loading {
@@ -203,9 +217,9 @@ input[type="range"] { accent-color: var(--accent); width: 100%; }
 .year-label.now strong { color: var(--accent); }
 .ticks { position: relative; height: 8px; margin: -2px 8px 0; }
 .ticks i { position: absolute; top: 0; width: 2px; height: 6px; margin-left: -1px; background: var(--border); }
-.ticks i.map { background: #b98b52; }
-.ticks i.photo { background: #6fa8c9; }
-.ticks i.lidar { background: #c9c9c9; }
+.ticks i.map { background: var(--kind-map); }
+.ticks i.photo { background: var(--kind-photo); }
+.ticks i.lidar { background: var(--kind-lidar); }
 .time-row { display: flex; gap: 12px; align-items: center; margin-top: 6px; }
 .time-row .seg { margin: 0; flex: 0 0 auto; }
 .time-row .seg button { padding: 5px 12px; }
@@ -230,7 +244,7 @@ kbd {
 .swipe-line { position: absolute; top: 0; bottom: 0; left: -1px; width: 3px; background: #fff; box-shadow: 0 0 6px rgba(0, 0, 0, 0.6); }
 .swipe-handle {
   position: absolute; top: 50%; left: -22px; width: 44px; height: 44px; margin-top: -22px;
-  border-radius: 50%; border: 2px solid #fff; background: #16181b; color: #fff;
+  border-radius: 50%; border: 2px solid #fff; background: var(--chrome); color: #fff;
   font-size: 1.2rem; letter-spacing: 2px; cursor: ew-resize; pointer-events: auto; touch-action: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
@@ -277,13 +291,13 @@ kbd {
 
 .note-pop { display: grid; gap: 6px; font-family: var(--sans); font-size: 0.9rem; }
 .note-pop textarea {
-  width: 100%; resize: vertical; font: inherit; padding: 6px 8px; border-radius: 6px; border: 1px solid #bbb;
+  width: 100%; resize: vertical; font: inherit; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--popup-line);
 }
-.note-pop .meta { color: #666; font-size: 0.8rem; }
-.note-pop .btn { background: #f2f2f2; color: #222; border-color: #ccc; }
+.note-pop .meta { color: var(--popup-muted); font-size: 0.8rem; }
+.note-pop .btn { background: var(--popup-btn); color: var(--popup-btn-ink); border-color: var(--popup-btn-line); }
 .note-pin span {
   display: block; width: 18px; height: 18px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
-  background: #5fd38d; border: 2px solid #16181b; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  background: var(--note); border: 2px solid var(--chrome); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 .spot-pin {
   width: 18px; height: 18px; border-radius: 50%; border: 3px solid #fff;
@@ -342,13 +356,13 @@ kbd {
 
 .viewer {
   position: fixed; inset: 0; z-index: 2000; display: flex; flex-direction: column;
-  background: #0d0e10;
+  background: var(--viewer-bg);
 }
 .viewer-head { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--border); }
 .viewer-title { flex: 1 1 auto; min-width: 0; text-align: center; line-height: 1.25; }
 .viewer-title strong { display: block; font-family: var(--serif); }
 .viewer-title span { color: var(--muted); font-size: 0.85rem; }
-#viewer-map { flex: 1 1 auto; min-height: 0; background: #0d0e10; }
+#viewer-map { flex: 1 1 auto; min-height: 0; background: var(--viewer-bg); }
 .viewer-tools {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 6px 18px; align-items: center;
   padding: 10px 16px; border-top: 1px solid var(--border); background: var(--chrome);
@@ -402,5 +416,5 @@ kbd {
 .map-top .extras { align-self: stretch; }
 /* Only the chosen view is solid gold; things switched on get a quiet gold tint. */
 .map-top .extras .chip:has(input:checked), .map-top .mines .chip:has(input:checked) {
-  background: rgba(212, 162, 76, 0.16); color: var(--accent);
+  background: var(--accent-tint); color: var(--accent);
 }
