@@ -334,7 +334,8 @@ kbd {
   .timebar .icon-btn { width: 32px; height: 32px; font-size: 1.1rem; }
   .timebar .year-label span { font-size: 0.75rem; }
   .time-row { margin-top: 2px; }
-  .leaflet-control-attribution { font-size: 9px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* The credits wrap to fit beside the scale bar instead of running off the left edge. */
+  .leaflet-control-attribution { font-size: 9px; max-width: calc(100vw - 96px); white-space: normal; line-height: 1.3; }
 }
 
 /* ---------- Old aerial photo viewer ---------- */
@@ -371,3 +372,20 @@ kbd {
 }
 
 .chips.mines input[type="range"] { width: 90px; flex: 0 0 auto; }
+
+/* A row of chips that runs off the side fades out there, to show there is more to scroll to. */
+.chips.more { mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); }
+
+/* Touch screens: every control at least 44px, the size of a fingertip. */
+@media (pointer: coarse) {
+  .top-link { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
+  .leaflet-touch .leaflet-bar a { width: 44px; height: 44px; line-height: 44px; }
+  .chip, .seg button { min-height: 44px; }
+  .timebar .icon-btn { width: 44px; height: 44px; }
+  input[type="range"] { min-height: 44px; }
+}
+
+/* "Reduce motion" set on the device: no fades or sliding. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

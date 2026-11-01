@@ -352,7 +352,10 @@
   // ---------- Map ----------
 
   var state = readHash();
-  var map = L.map('map', { center: [state.lat, state.lng], zoom: state.zoom, minZoom: 7 });
+  // "Reduce motion" set on the device: zooms and pans jump instead of gliding.
+  var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var map = L.map('map', { center: [state.lat, state.lng], zoom: state.zoom, minZoom: 7,
+    zoomAnimation: !still, fadeAnimation: !still, markerZoomAnimation: !still, inertia: !still });
   map.createPane('blend');
   map.getPane('blend').style.zIndex = 210;   // LIDAR multiplied into the photo below it (see the CSS)
   map.createPane('older');
@@ -915,6 +918,7 @@
     $('mine-seam').innerHTML = '<option value="">Off</option>' + Object.keys(seamIds).map(function (s) {
       return '<option>' + escapeHtml(s) + '</option>';
     }).join('');
+    markMore();   // the longer seam names can push the row off the side
   }).catch(function () { $('mine-seam').innerHTML = '<option value="">Not available</option>'; });
 
   $('mine-seam').addEventListener('change', function (e) {
@@ -922,6 +926,7 @@
     seamLayer = null;
     var ids = seamIds[e.target.value];
     $('mine-opacity').hidden = !ids;
+    markMore();
     if (!ids) return;
     seamLayer = exportLayer(MINE_MAPS + '/export', '&format=png32&transparent=true&layers=show:' + ids.join(','), {
       attribution: 'Mine maps: PA DEP via <a href="https://www.pasda.psu.edu/">PASDA</a>'
@@ -1663,4 +1668,15 @@
   setMode(state.mode);
   renderNotes();
   if (state.older) setTime(true);
+
+  // Chip rows that run off the side get the fade at their edge (CSS .more) until scrolled to the end.
+  var chipRows = document.querySelectorAll('.chips');
+  function markMore() {
+    Array.prototype.forEach.call(chipRows, function (row) {
+      row.classList.toggle('more', row.scrollLeft + row.clientWidth < row.scrollWidth - 2);
+    });
+  }
+  Array.prototype.forEach.call(chipRows, function (row) { row.addEventListener('scroll', markMore, { passive: true }); });
+  window.addEventListener('resize', markMore);
+  markMore();
 })();
